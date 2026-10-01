@@ -1,5 +1,12 @@
 require('dotenv').config();
 const express = require('express');
+// Must be required right after 'express' and before any routes are defined —
+// it monkey-patches Router so a thrown/rejected error inside an async
+// controller reaches the error-handling middleware below instead of
+// crashing the whole process. Without this, ANY unhandled error in ANY
+// controller — not just the PDF renderer — takes the entire server down
+// for every user, not just the request that failed.
+require('express-async-errors');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');

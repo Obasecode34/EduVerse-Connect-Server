@@ -74,7 +74,18 @@ function buildHtml(resume) {
 // switching to puppeteer-core + @sparticuz/chromium (a slimmer, serverless-
 // oriented Chromium build) if Render's plan doesn't have the memory for it.
 async function renderResumeToPdf(resume) {
-  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+  // If PUPPETEER_EXECUTABLE_PATH is set (e.g. pointing at an existing Chrome
+  // install — "C:\Program Files\Google\Chrome\Application\chrome.exe" on
+  // Windows), use that instead of requiring Puppeteer's own bundled Chromium
+  // download to have succeeded. Useful when that download is blocked by a
+  // firewall/proxy, or simply hasn't been run yet — this makes the feature
+  // work either way rather than hard-depending on one install path.
+  const launchOptions = { args: ['--no-sandbox'] };
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+
+  const browser = await puppeteer.launch(launchOptions);
   try {
     const page = await browser.newPage();
     await page.setContent(buildHtml(resume), { waitUntil: 'networkidle0' });
